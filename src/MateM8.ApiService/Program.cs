@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text;
+using System.Web;
 using MateM8.ApiService;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
@@ -44,7 +45,9 @@ app.MapPost("/email", async (HttpContext context, MateDbContext dbContext, IConf
     var formData = await context.Request.ReadFormAsync();
     var email = formData["email"].ToString();
 
-    var otp = DateTime.Now.ToString("ffffff");
+    var otpBytes = new byte[4];
+    RandomNumberGenerator.Create().GetBytes(otpBytes);
+    var otp = ((BitConverter.ToInt32(otpBytes) & int.MaxValue) % 100000000).ToString("00000000");
 
     var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
     if (user != null)
