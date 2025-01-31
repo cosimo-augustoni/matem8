@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Mail;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
@@ -77,10 +78,22 @@ app.MapPost("/email", async (HttpContext context, MateDbContext dbContext, IConf
         Credentials = new NetworkCredential(smtpSettings.Username, smtpSettings.Password)
     };
 
-    var mailMessage = new MailMessage(from: "signIn@mate.kallisto.li",
+    string mailbody;
+
+    var assembly = Assembly.GetExecutingAssembly();
+    var emailTemplateResourceName = assembly.GetManifestResourceNames().Single(n => n.EndsWith("singup_email.html"));
+    await using (var emailTemplateResource = assembly.GetManifestResourceStream(emailTemplateResourceName))
+    using (var reader = new StreamReader(emailTemplateResource!))
+    {
+        mailbody = reader.ReadToEnd();
+        mailbody = mailbody.Replace("??ApplicationUrl??",
+            $"{configuration.GetValue<string>("ApplicationUrl")}/confirm/{email}/{otp}");
+    }
+
+    var mailMessage = new MailMessage(from: configuration.GetValue<string>("From"),
         to: email,
-        "OTP zum einloggen",
-        $"<a href=\"{configuration.GetValue<string>("ApplicationUrl")}/confirm/{email}/{otp}\">Einloggen</a>"
+        "Mate M8 Anmeldung",
+        mailbody
     );
     mailMessage.IsBodyHtml = true;
     await client.SendMailAsync(mailMessage);

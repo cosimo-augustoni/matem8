@@ -7,6 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Email Templates\singup_email.html" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Email Templates\singup_email.html" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\MateM8.ServiceDefaults\MateM8.ServiceDefaults.csproj" />
   </ItemGroup>
 
