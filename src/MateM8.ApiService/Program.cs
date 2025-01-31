@@ -10,10 +10,6 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add service defaults & Aspire client integrations.
-builder.AddServiceDefaults();
-
-// Add services to the container.
 builder.Services.AddProblemDetails();
 
 builder.Services.AddDbContext<MateDbContext>();
@@ -25,13 +21,7 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
     ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor
 });
 
-// Configure the HTTP request pipeline.
 app.UseExceptionHandler();
-
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
 
 app.Map("/", (HttpContext context) =>
 {
@@ -151,8 +141,6 @@ app.MapPut("/mate/{mateType}/{count:int}", async (MateType mateType, int count, 
     return Results.LocalRedirect("/mate_recorded.html");
 });
 
-app.MapDefaultEndpoints();
-
 app.UseFileServer(new FileServerOptions
 {
     StaticFileOptions = {
@@ -173,11 +161,3 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
-
-public class SmtpSettings
-{
-    public required string Host { get; set; }
-    public required string Username { get; set; }
-    public required string Password { get; set; }
-}
-
