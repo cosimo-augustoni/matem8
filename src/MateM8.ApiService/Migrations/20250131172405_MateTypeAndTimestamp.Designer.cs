@@ -3,6 +3,7 @@ using System;
 using MateM8.ApiService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MateM8.ApiService.Migrations
 {
     [DbContext(typeof(MateDbContext))]
-    partial class MateDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250131172405_MateTypeAndTimestamp")]
+    partial class MateTypeAndTimestamp
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.1");

@@ -85,7 +85,7 @@ app.MapPost("/email", async (HttpContext context, MateDbContext dbContext, IConf
     mailMessage.IsBodyHtml = true;
     await client.SendMailAsync(mailMessage);
 
-    return Results.Ok();
+    return Results.LocalRedirect("/email_sent.html");
 });
 
 app.MapGet("/confirm/{email}/{otp}", async (string email, string otp, HttpContext context, MateDbContext dbContext, IConfiguration configuration) =>
@@ -114,7 +114,7 @@ app.MapGet("/confirm/{email}/{otp}", async (string email, string otp, HttpContex
     return Results.LocalRedirect("/mate.html");
 });
 
-app.MapPut("/mate", async (HttpContext context, MateDbContext dbContext) =>
+app.MapPut("/mate/{mateType}/{count:int}", async (MateType mateType, int count, HttpContext context, MateDbContext dbContext) =>
 {
     if (!context.Request.Cookies.TryGetValue("session", out var session))
         return Results.Redirect("/");
@@ -122,15 +122,20 @@ app.MapPut("/mate", async (HttpContext context, MateDbContext dbContext) =>
     if (user == null)
         return Results.Redirect("/");
 
-    var mate = new Mate()
+    for (int i = 0; i < count; i++)
     {
-        Id = 0,
-        User = user.Email,
-    };
-    await dbContext.Mates.AddAsync(mate);
+        var mate = new Mate()
+        {
+            Id = 0,
+            CreatedAt = DateTimeOffset.Now,
+            User = user.Email,
+            Type = mateType
+        };
+        await dbContext.Mates.AddAsync(mate);
+    }
     await dbContext.SaveChangesAsync();
 
-    return Results.Ok();
+    return Results.LocalRedirect("/mate_recorded.html");
 });
 
 app.MapDefaultEndpoints();

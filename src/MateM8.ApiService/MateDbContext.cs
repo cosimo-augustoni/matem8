@@ -16,6 +16,8 @@ namespace MateM8.ApiService
             mateBuilder.HasKey(e => e.Id);
             mateBuilder.Property(e => e.Id).ValueGeneratedOnAdd();
             mateBuilder.Property(e => e.User);
+            mateBuilder.Property(e => e.CreatedAt);
+            mateBuilder.Property(e => e.Type);
 
             var userBuilder = modelBuilder.Entity<User>().ToTable("User");
             userBuilder.HasKey(e => e.Email);
@@ -30,8 +32,16 @@ namespace MateM8.ApiService
     public class Mate
     {
         public required long Id { get; init; }
-
+        public required DateTimeOffset CreatedAt { get; init; }
         public required string User { get; init; }
+        public required MateType Type { get; init; }
+    }
+
+    public enum MateType
+    {
+        Blue = 1,
+        Ginger = 2,
+        Mint = 3
     }
 
 
