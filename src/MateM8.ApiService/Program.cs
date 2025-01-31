@@ -1,17 +1,21 @@
-using System.Net;
-using System.Net.Mail;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using System.Web;
 using MateM8.ApiService;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using SendGrid;
-using SendGrid.Helpers.Mail.Model;
 using SendGrid.Helpers.Mail;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddJsonFile("./config/appsettings.json", optional: false);
+
+builder.Host.ConfigureLogging(logging =>
+{
+    logging.ClearProviders();
+    logging.AddConsole();
+});
 
 builder.Services.AddProblemDetails();
 
@@ -25,6 +29,8 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 
 app.UseExceptionHandler();
+
+app.Map("/health", () => Results.Ok());
 
 app.Map("/", (HttpContext context) =>
 {
