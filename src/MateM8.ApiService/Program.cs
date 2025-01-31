@@ -7,6 +7,9 @@ using System.Web;
 using MateM8.ApiService;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using SendGrid;
+using SendGrid.Helpers.Mail.Model;
+using SendGrid.Helpers.Mail;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,14 +62,7 @@ app.MapPost("/email", async (HttpContext context, MateDbContext dbContext, IConf
 
     await dbContext.SaveChangesAsync();
 
-    var smtpSettings = configuration.GetRequiredSection("Smtp").Get<SmtpSettings>();
-
-    var client = new SmtpClient(smtpSettings.Host, 587)
-    {
-        EnableSsl = true,
-        UseDefaultCredentials = false,
-        Credentials = new NetworkCredential(smtpSettings.Username, smtpSettings.Password)
-    };
+    
 
     string mailbody;
 
@@ -80,13 +76,13 @@ app.MapPost("/email", async (HttpContext context, MateDbContext dbContext, IConf
             $"{configuration.GetValue<string>("ApplicationUrl")}/confirm/{email}/{otp}");
     }
 
-    var mailMessage = new MailMessage(from: configuration.GetValue<string>("From"),
-        to: email,
-        "Mate M8 Anmeldung",
-        mailbody
-    );
-    mailMessage.IsBodyHtml = true;
-    await client.SendMailAsync(mailMessage);
+    var mailSettings = configuration.GetRequiredSection("Mail").Get<MailSettings>();
+
+    var mailClient = new SendGridClient(mailSettings.ApiKey);
+
+    var from = new EmailAddress(mailSettings.From, "Mate M8");
+    var mailMessage = MailHelper.CreateSingleEmail(from, new EmailAddress(email), "Mate M8 Anmeldung", null, mailbody);
+    await mailClient.SendEmailAsync(mailMessage);
 
     return Results.LocalRedirect("/email_sent.html");
 });
