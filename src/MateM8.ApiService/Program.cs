@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using MateM8.ApiService;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using SendGrid;
@@ -122,10 +123,30 @@ app.MapGet("/confirm/{email}/{otp}", async (string email, string otp, HttpContex
 app.MapPut("/mate/{mateType}/{count:int}", async (MateType mateType, int count, HttpContext context, MateDbContext dbContext) =>
 {
     if (!context.Request.Cookies.TryGetValue("session", out var session))
-        return Results.Redirect("/");
+    {
+        context.Response.Cookies.Append("session", "invalid-Session", new CookieOptions
+        {
+            Expires = DateTimeOffset.UtcNow.AddDays(-1),
+            IsEssential = true,
+            HttpOnly = true,
+            Secure = true,
+        });
+        return Results.Redirect("/session_ended.html");
+    }
+        
     var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Session == session);
     if (user == null)
-        return Results.Redirect("/");
+    {
+        context.Response.Cookies.Append("session", "invalid-Session", new CookieOptions
+        {
+            Expires = DateTimeOffset.UtcNow.AddDays(-1),
+            IsEssential = true,
+            HttpOnly = true,
+            Secure = true,
+        });
+        return Results.Redirect("/session_ended.html");
+    }
+        
 
     for (int i = 0; i < count; i++)
     {
