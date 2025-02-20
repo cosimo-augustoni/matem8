@@ -115,6 +115,8 @@ app.MapGet("/confirm/{email}/{otp}", async (string email, string otp, HttpContex
         IsEssential = true,
         HttpOnly = true,
         Secure = true,
+        SameSite = SameSiteMode.Strict,
+        
     };
     context.Response.Cookies.Append("session", session, cookieOptions);
     return Results.LocalRedirect("/mate.html");
