@@ -10,7 +10,35 @@
     <div class="d-flex flex-column justify-content-center align-items-center w-100 p-3 vh-100">
         <h1>Mate erfolgrich erfasst</h1>
         <a class="btn btn-primary m-3" href="mate.html" role="button">I will nomol eis</a>
+        <div class="m-5">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Zeitraum</th>
+                        <th>Anzahl</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                </tbody>
+            </table>
+        </div>
     </div>
 </body>
 </html>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+
+<script>
+
+    fetch(`/mate/stats`, { method: "GET" })
+        .then(response => response.json())
+        .then(json => {
+            let tableRows = json.map(e => {
+                return `<tr><td>${e.scope}</td><td>${e.count}</td></tr>`
+            }).join("");
+            const tableBody = document.getElementById("table-body");
+            tableBody.innerHTML = tableRows;
+        })
+        .catch(function (err) {
+            console.error(err);
+        });
+</script>

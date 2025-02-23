@@ -1,4 +1,7 @@
+using System.Globalization;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using MateM8.ApiService;
@@ -121,6 +124,26 @@ app.MapGet("/confirm/{emailHash}/{otp}", async (string emailHash, string otp, Ht
     };
     context.Response.Cookies.Append("session", session, cookieOptions);
     return Results.LocalRedirect("/mate.html");
+});
+
+app.MapGet("/mate/stats", async (HttpContext context, MateDbContext dbContext) =>
+{
+    if (context.Request.Cookies.TryGetValue("session", out var session))
+    {
+        var user = await dbContext.Users.FirstAsync(u => u.Session == session);
+        var mates = await dbContext.Mates.Where(m => m.User == user.Email).ToListAsync();
+        var matesToday = mates.Where(m => m.CreatedAt.Date == DateTimeOffset.Now.Date);
+        var matesThisMonth = mates.Where(m =>
+            m.CreatedAt > new DateTime(DateTimeOffset.Now.Year, DateTimeOffset.Now.Month, 1));
+
+        return new []{
+            new { Scope = "Hüt", Count = matesToday.Count()}, 
+            new { Scope = DateTimeOffset.Now.ToString("MMMM", new CultureInfo("de-CH")), Count = matesThisMonth.Count()},
+            new { Scope = "Alles", Count = mates.Count}
+        };
+    }
+
+    return [];
 });
 
 app.MapPut("/mate/{mateType}/{count:int}", async (MateType mateType, int count, HttpContext context, MateDbContext dbContext) =>
