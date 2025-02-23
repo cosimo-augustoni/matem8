@@ -69,7 +69,7 @@ app.MapPost("/email", async (HttpContext context, MateDbContext dbContext, IConf
 
     await dbContext.SaveChangesAsync();
 
-    
+
 
     string mailbody;
 
@@ -80,7 +80,7 @@ app.MapPost("/email", async (HttpContext context, MateDbContext dbContext, IConf
     {
         mailbody = reader.ReadToEnd();
         mailbody = mailbody.Replace("??ApplicationUrl??",
-            $"{configuration.GetValue<string>("ApplicationUrl")}/confirm/{email}/{otp}");
+            $"{configuration.GetValue<string>("ApplicationUrl")}/confirm/{Convert.ToBase64String(Encoding.UTF8.GetBytes(email))}/{otp}");
     }
 
     var mailSettings = configuration.GetRequiredSection("Mail").Get<MailSettings>();
@@ -94,10 +94,11 @@ app.MapPost("/email", async (HttpContext context, MateDbContext dbContext, IConf
     return Results.LocalRedirect("/email_sent.html");
 });
 
-app.MapGet("/confirm/{email}/{otp}", async (string email, string otp, HttpContext context, MateDbContext dbContext, IConfiguration configuration) =>
+app.MapGet("/confirm/{emailHash}/{otp}", async (string emailHash, string otp, HttpContext context, MateDbContext dbContext, IConfiguration configuration) =>
 {
-    var user = await dbContext.Users.FirstAsync(u => u.Email == email);
-    if (user.Otp != otp)
+    var users = await dbContext.Users.Where(u => u.Otp != null).ToListAsync();
+    var user = users.FirstOrDefault(u => Convert.ToBase64String(Encoding.UTF8.GetBytes(u.Email)) == emailHash);
+    if (user == null || user.Otp != otp)
         return Results.LocalRedirect("/");
 
     var hashKey = configuration.GetValue<string>("SessionHashKey");
@@ -116,7 +117,7 @@ app.MapGet("/confirm/{email}/{otp}", async (string email, string otp, HttpContex
         HttpOnly = true,
         Secure = true,
         SameSite = SameSiteMode.Strict,
-        
+
     };
     context.Response.Cookies.Append("session", session, cookieOptions);
     return Results.LocalRedirect("/mate.html");
@@ -135,7 +136,7 @@ app.MapPut("/mate/{mateType}/{count:int}", async (MateType mateType, int count, 
         });
         return Results.Redirect("/session_ended.html");
     }
-        
+
     var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Session == session);
     if (user == null)
     {
@@ -148,7 +149,7 @@ app.MapPut("/mate/{mateType}/{count:int}", async (MateType mateType, int count, 
         });
         return Results.Redirect("/session_ended.html");
     }
-        
+
 
     for (int i = 0; i < count; i++)
     {
