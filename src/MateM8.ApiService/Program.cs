@@ -137,7 +137,7 @@ app.MapGet("/mate/stats", async (HttpContext context, MateDbContext dbContext) =
             m.CreatedAt > new DateTime(DateTimeOffset.Now.Year, DateTimeOffset.Now.Month, 1));
 
         return new []{
-            new { Scope = "Hüt", Count = matesToday.Count()}, 
+            new { Scope = "Heute", Count = matesToday.Count()}, 
             new { Scope = DateTimeOffset.Now.ToString("MMMM", new CultureInfo("de-CH")), Count = matesThisMonth.Count()},
             new { Scope = "Alles", Count = mates.Count}
         };
