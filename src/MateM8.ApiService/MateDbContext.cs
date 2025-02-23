@@ -32,7 +32,7 @@ namespace MateM8.ApiService
     public class Mate
     {
         public required long Id { get; init; }
-        public required DateTimeOffset CreatedAt { get; init; }
+        public required DateTime CreatedAt { get; init; }
         public required string User { get; init; }
         public required MateType Type { get; init; }
     }

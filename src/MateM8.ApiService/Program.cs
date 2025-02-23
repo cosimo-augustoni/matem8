@@ -1,11 +1,8 @@
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using MateM8.ApiService;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using SendGrid;
@@ -24,6 +21,7 @@ builder.Host.ConfigureLogging(logging =>
 builder.Services.AddProblemDetails();
 
 builder.Services.AddDbContext<MateDbContext>();
+builder.Services.AddHostedService<InvoicingService>();
 
 var app = builder.Build();
 
@@ -90,7 +88,7 @@ app.MapPost("/email", async (HttpContext context, MateDbContext dbContext, IConf
 
     var mailClient = new SendGridClient(mailSettings.ApiKey);
 
-    var from = new EmailAddress(mailSettings.From, "Mate M8");
+    var from = new EmailAddress(mailSettings.SignInFrom, "Mate M8");
     var mailMessage = MailHelper.CreateSingleEmail(from, new EmailAddress(email), "Mate M8 Anmeldung", null, mailbody);
     await mailClient.SendEmailAsync(mailMessage);
 
@@ -115,7 +113,7 @@ app.MapGet("/confirm/{emailHash}/{otp}", async (string emailHash, string otp, Ht
 
     var cookieOptions = new CookieOptions()
     {
-        Expires = DateTimeOffset.UtcNow.AddMonths(3),
+        Expires = DateTime.UtcNow.AddMonths(3),
         IsEssential = true,
         HttpOnly = true,
         Secure = true,
@@ -132,13 +130,13 @@ app.MapGet("/mate/stats", async (HttpContext context, MateDbContext dbContext) =
     {
         var user = await dbContext.Users.FirstAsync(u => u.Session == session);
         var mates = await dbContext.Mates.Where(m => m.User == user.Email).ToListAsync();
-        var matesToday = mates.Where(m => m.CreatedAt.Date == DateTimeOffset.Now.Date);
+        var matesToday = mates.Where(m => m.CreatedAt.Date == DateTime.Now.Date);
         var matesThisMonth = mates.Where(m =>
-            m.CreatedAt > new DateTime(DateTimeOffset.Now.Year, DateTimeOffset.Now.Month, 1));
+            m.CreatedAt > new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1));
 
-        return new []{
-            new { Scope = "Heute", Count = matesToday.Count()}, 
-            new { Scope = DateTimeOffset.Now.ToString("MMMM", new CultureInfo("de-CH")), Count = matesThisMonth.Count()},
+        return new[]{
+            new { Scope = "Heute", Count = matesToday.Count()},
+            new { Scope = DateTime.Now.ToString("MMMM", new CultureInfo("de-CH")), Count = matesThisMonth.Count()},
             new { Scope = "Alles", Count = mates.Count}
         };
     }
@@ -152,7 +150,7 @@ app.MapPut("/mate/{mateType}/{count:int}", async (MateType mateType, int count, 
     {
         context.Response.Cookies.Append("session", "invalid-Session", new CookieOptions
         {
-            Expires = DateTimeOffset.UtcNow.AddDays(-1),
+            Expires = DateTime.UtcNow.AddDays(-1),
             IsEssential = true,
             HttpOnly = true,
             Secure = true,
@@ -165,7 +163,7 @@ app.MapPut("/mate/{mateType}/{count:int}", async (MateType mateType, int count, 
     {
         context.Response.Cookies.Append("session", "invalid-Session", new CookieOptions
         {
-            Expires = DateTimeOffset.UtcNow.AddDays(-1),
+            Expires = DateTime.UtcNow.AddDays(-1),
             IsEssential = true,
             HttpOnly = true,
             Secure = true,
@@ -179,7 +177,7 @@ app.MapPut("/mate/{mateType}/{count:int}", async (MateType mateType, int count, 
         var mate = new Mate()
         {
             Id = 0,
-            CreatedAt = DateTimeOffset.Now,
+            CreatedAt = DateTime.Now,
             User = user.Email,
             Type = mateType
         };

@@ -10,11 +10,13 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <None Remove="Email Templates\invoice.html" />
         <None Remove="Email Templates\singup_email.html" />
         <Content Update="config/**" CopyToPublishDirectory="Never" />
     </ItemGroup>
 
     <ItemGroup>
+        <EmbeddedResource Include="Email Templates\invoice.html" />
         <EmbeddedResource Include="Email Templates\singup_email.html" />
     </ItemGroup>
 
